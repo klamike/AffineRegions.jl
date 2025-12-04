@@ -9,22 +9,9 @@ const DualizationJuMPExt = Base.get_extension(Dualization, :DualizationJuMPExt)
 
 export affine_region
 function affine_region(model::JuMP.Model)
-    !(JuMP.backend(model) isa DiffOpt.Optimizer) && (
-        error("Backend must be a DiffOpt.Optimizer. Got: $(JuMP.backend(model))")
-    )
-    !JuMP.is_solved_and_feasible(model) && (
-        error("Model must be solved and feasible. Got: $(JuMP.termination_status(model))")
-    )
+    check_model(model)
 
-    xp = JuMP.all_variables(model)
-    all_cons = JuMP.all_constraints(model, include_variable_in_set_constraints = true)
-
-    variables = filter(!JuMP.is_parameter, xp)
-    parameters = filter(JuMP.is_parameter, xp)
-    duals = filter(!is_parameter_constraint, all_cons)
-
-    primal_laws, dual_laws = compute_laws(model, variables, parameters, duals)
-
+    primal_laws, dual_laws = compute_laws(model)
     constraints = compute_constraints(model, primal_laws, dual_laws)
 
     return (
@@ -35,7 +22,14 @@ function affine_region(model::JuMP.Model)
 end
 
 
-function compute_laws(model, variables, parameters, duals; tol=1e-10)
+function compute_laws(model; tol=1e-10)
+    xp = JuMP.all_variables(model)
+    all_cons = JuMP.all_constraints(model, include_variable_in_set_constraints = true)
+
+    variables = filter(!JuMP.is_parameter, xp)
+    parameters = filter(JuMP.is_parameter, xp)
+    duals = filter(!is_parameter_constraint, all_cons)
+
     primal_laws = Dict{JuMP.VariableRef, JuMP.AffExpr}(
         xᵢ => JuMP.AffExpr() for xᵢ in variables
     )
@@ -221,5 +215,14 @@ _should_skip(func, set) = false
 _should_skip(func, set::MOI.EqualTo) = (JuMP.value(func) == set.value)
 _should_skip(func, set::MOI.GreaterThan) = (JuMP.value(func) >= set.lower)
 _should_skip(func, set::MOI.LessThan) = (JuMP.value(func) <= set.upper)
+
+check_model(model) = begin
+    !(JuMP.backend(model) isa DiffOpt.Optimizer) && (
+        error("Backend must be a DiffOpt.Optimizer. Got: $(JuMP.backend(model))")
+    )
+    !JuMP.is_solved_and_feasible(model) && (
+        error("Model must be solved and feasible. Got: $(JuMP.termination_status(model))")
+    )
+end
 
 end # module AffineRegions
