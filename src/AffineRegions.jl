@@ -90,6 +90,7 @@ function compute_laws(model, variables, parameters, duals; tol=1e-10)
 end
 
 function compute_constraints(model, primal_laws, dual_laws;
+                             force_new_dual = true,  # TODO: detect when only parameters changed
                              add_dual_constraints = true,
                              strong_duality_set = nothing)  # e.g. MOI.EqualTo(0.0)
     constraints = JuMP.ScalarConstraint[]
@@ -110,9 +111,14 @@ function compute_constraints(model, primal_laws, dual_laws;
     if add_dual_constraints || !isnothing(strong_duality_set)
 
         # FIXME: dualization requires AUTOMATIC mode
-        buffer_model = JuMP.Model()
-        buffer_map = MOI.copy_to(JuMP.backend(buffer_model), model)
-        dual_model = Dualization.dualize(buffer_model)
+        dual_model, buffer_map = if force_new_dual || !haskey(model.ext, :_AffineRegions_jl_DualModel)
+            buffer_model = JuMP.Model()
+            buffer_map = MOI.copy_to(JuMP.backend(buffer_model), model)
+            dual_model = Dualization.dualize(buffer_model)
+            model.ext[:_AffineRegions_jl_DualModel] = (dual_model, buffer_map)
+        else
+            model.ext[:_AffineRegions_jl_DualModel]
+        end
 
         if add_dual_constraints
             # substitute dual law into dual constraints
