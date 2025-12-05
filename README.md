@@ -11,7 +11,9 @@ optimize!(model)
 
 (
     constraints,  # constraints (in terms of parameters)
-                  #    within which the laws are optimal
+                  #    within which the laws are primal-dual feasible;
+                  #    if parameters enter the objective and/or RHS linearly,
+                  #    the solution given by the laws is also optimal
 
     primal_law,   # Dict{VariableRef,AffExpr} where each AffExpr
                   #    maps parameters to optimal primal solution
