@@ -138,7 +138,8 @@ function compute_constraints(model, primal_laws, dual_laws;
             dual_value = JuMP.value(vr -> get_dual_law(vr, dual_model, dual_laws, primal_laws, buffer_map, model), dual_obj)
 
             func = primal_value - dual_value
-            push!(constraints, JuMP.ScalarConstraint(func, strong_duality_set))
+            is_aff_or_quad(func) && JuMP.drop_zeros!(func)
+            !should_skip(func, co.set) && push!(constraints, JuMP.ScalarConstraint(func, strong_duality_set))
         end
     end
 
@@ -215,6 +216,10 @@ _should_skip(func, set) = false
 _should_skip(func, set::MOI.EqualTo) = (JuMP.value(func) == set.value)
 _should_skip(func, set::MOI.GreaterThan) = (JuMP.value(func) >= set.lower)
 _should_skip(func, set::MOI.LessThan) = (JuMP.value(func) <= set.upper)
+
+is_aff_or_quad(func::JuMP.AffExpr) = true
+is_aff_or_quad(func::JuMP.QuadExpr) = true
+is_aff_or_quad(func) = false
 
 check_model(model) = begin
     !(JuMP.backend(model) isa DiffOpt.Optimizer) && (
