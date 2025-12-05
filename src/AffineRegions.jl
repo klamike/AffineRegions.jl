@@ -98,7 +98,7 @@ function compute_constraints(model, primal_laws, dual_laws;
 
         co = JuMP.constraint_object(constraint)
         func = JuMP.value(primal_map, co.func)
-        JuMP.drop_zeros!(func)
+        drop_zeros!(func)
         should_skip(func, co.set) && continue
         push!(constraints, JuMP.ScalarConstraint(func, co.set))
     end
@@ -126,7 +126,7 @@ function compute_constraints(model, primal_laws, dual_laws;
 
                 co = JuMP.constraint_object(constraint)
                 func = JuMP.value(dual_map, co.func)
-                JuMP.drop_zeros!(func)
+                drop_zeros!(func)
                 should_skip(func, co.set) && continue
                 push!(constraints, JuMP.ScalarConstraint(func, co.set))
             end
@@ -141,7 +141,7 @@ function compute_constraints(model, primal_laws, dual_laws;
             dual_value = JuMP.value(dual_map, dual_obj)
 
             func = primal_value - dual_value
-            is_aff_or_quad(func) && JuMP.drop_zeros!(func)
+            drop_zeros!(func)
             !should_skip(func, co.set) && push!(constraints,
                 JuMP.ScalarConstraint(func, strong_duality_set))
         end
@@ -221,10 +221,6 @@ _should_skip(func, set::MOI.EqualTo) = (JuMP.value(func) == set.value)
 _should_skip(func, set::MOI.GreaterThan) = (JuMP.value(func) >= set.lower)
 _should_skip(func, set::MOI.LessThan) = (JuMP.value(func) <= set.upper)
 
-is_aff_or_quad(func::JuMP.AffExpr) = true
-is_aff_or_quad(func::JuMP.QuadExpr) = true
-is_aff_or_quad(func) = false
-
 check_model(model) = begin
     !(JuMP.backend(model) isa DiffOpt.Optimizer) && (
         error("Backend must be a DiffOpt.Optimizer. Got: $(JuMP.backend(model))")
@@ -235,5 +231,8 @@ check_model(model) = begin
 end
 
 all_constraints(model) = JuMP.all_constraints(model, include_variable_in_set_constraints = true)
+
+drop_zeros!(expr::Union{JuMP.AffExpr,JuMP.QuadExpr}) = JuMP.drop_zeros!(expr)
+drop_zeros!(expr) = nothing
 
 end # module AffineRegions
