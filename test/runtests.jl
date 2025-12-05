@@ -195,4 +195,6 @@ using JuMP, DiffOpt, HiGHS
             @test c3[2].set.lower == 0.0
         end
     end
+
+    # TODO: test quadratic objective (dual slacks)
 end
