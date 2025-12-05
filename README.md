@@ -15,9 +15,9 @@ optimize!(model)
                   #    in some cases, this also implies optimality
 
     primal_law,   # Dict{VariableRef,AffExpr} where each AffExpr
-                  #    maps parameters to optimal primal solution
+                  #    maps parameters to primal solution
 
     dual_law      # Dict{ConstraintRef,AffExpr} where each AffExpr
-                  #    maps parameters to optimal dual solution
+                  #    maps parameters to dual solution
 ) = affine_region(model)
 ```
