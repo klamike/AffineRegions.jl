@@ -24,7 +24,7 @@ end
 
 function compute_laws(model; tol=1e-10)
     xp = JuMP.all_variables(model)
-    all_cons = JuMP.all_constraints(model, include_variable_in_set_constraints = true)
+    all_cons = all_constraints(model)
 
     variables = filter(!JuMP.is_parameter, xp)
     parameters = filter(JuMP.is_parameter, xp)
@@ -90,13 +90,14 @@ function compute_constraints(model, primal_laws, dual_laws;
     constraints = JuMP.ScalarConstraint[]
 
     # substitute primal law into primal constraints
-    primal_constraints = JuMP.all_constraints(model, include_variable_in_set_constraints = true)
+    primal_map = vr -> get_primal_law(vr, primal_laws)
+    primal_constraints = all_constraints(model)
     for constraint in primal_constraints
         is_parameter_constraint(constraint) && continue
         is_equality_constraint(constraint) && continue
 
         co = JuMP.constraint_object(constraint)
-        func = JuMP.value(vr -> get_primal_law(vr, primal_laws), co.func)
+        func = JuMP.value(primal_map, co.func)
         JuMP.drop_zeros!(func)
         should_skip(func, co.set) && continue
         push!(constraints, JuMP.ScalarConstraint(func, co.set))
@@ -114,15 +115,17 @@ function compute_constraints(model, primal_laws, dual_laws;
             model.ext[:_AffineRegions_jl_DualModel]
         end
 
+        dual_map = vr -> get_dual_law(vr, dual_model, dual_laws, primal_laws, buffer_map, model)
+
         if add_dual_constraints
             # substitute dual law into dual constraints
-            dual_constraints = JuMP.all_constraints(dual_model, include_variable_in_set_constraints = true)
+            dual_constraints = all_constraints(dual_model)
             for constraint in dual_constraints
                 is_parameter_constraint(constraint) && continue
                 is_equality_constraint(constraint) && continue
 
                 co = JuMP.constraint_object(constraint)
-                func = JuMP.value(vr -> get_dual_law(vr, dual_model, dual_laws, primal_laws, buffer_map, model), co.func)
+                func = JuMP.value(dual_map, co.func)
                 JuMP.drop_zeros!(func)
                 should_skip(func, co.set) && continue
                 push!(constraints, JuMP.ScalarConstraint(func, co.set))
@@ -134,12 +137,13 @@ function compute_constraints(model, primal_laws, dual_laws;
             primal_obj = JuMP.objective_function(model)
             dual_obj = JuMP.objective_function(dual_model)
 
-            primal_value = JuMP.value(vr -> get_primal_law(vr, primal_laws), primal_obj)
-            dual_value = JuMP.value(vr -> get_dual_law(vr, dual_model, dual_laws, primal_laws, buffer_map, model), dual_obj)
+            primal_value = JuMP.value(primal_map, primal_obj)
+            dual_value = JuMP.value(dual_map, dual_obj)
 
             func = primal_value - dual_value
             is_aff_or_quad(func) && JuMP.drop_zeros!(func)
-            !should_skip(func, co.set) && push!(constraints, JuMP.ScalarConstraint(func, strong_duality_set))
+            !should_skip(func, co.set) && push!(constraints,
+                JuMP.ScalarConstraint(func, strong_duality_set))
         end
     end
 
@@ -229,5 +233,7 @@ check_model(model) = begin
         error("Model must be solved and feasible. Got: $(JuMP.termination_status(model))")
     )
 end
+
+all_constraints(model) = JuMP.all_constraints(model, include_variable_in_set_constraints = true)
 
 end # module AffineRegions
