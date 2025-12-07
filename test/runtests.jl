@@ -19,7 +19,10 @@ using JuMP, DiffOpt, HiGHS
             @objective(model, Min, 2x)
             optimize!(model)
 
-            c, pl, dl = affine_region(model)
+            ar = affine_region(model)
+            c = ar.constraints
+            pl = ar.primal_law
+            dl = ar.dual_law
 
             @test pl[x] == 3p1
             @test dl[cons] == 2
@@ -34,7 +37,10 @@ using JuMP, DiffOpt, HiGHS
             set_parameter_value(p2, 5.0)
             optimize!(model)
 
-            c2, pl2, dl2 = affine_region(model)
+            ar2 = affine_region(model)
+            c2 = ar2.constraints
+            pl2 = ar2.primal_law
+            dl2 = ar2.dual_law
             @test c[1].func == c2[1].func
             @test c[1].set == c2[1].set
             @test pl == pl2
@@ -47,7 +53,10 @@ using JuMP, DiffOpt, HiGHS
             set_parameter_value(p2, 13.0)
             optimize!(model)
 
-            c3, pl3, dl3 = affine_region(model)
+            ar3 = affine_region(model)
+            c3 = ar3.constraints
+            pl3 = ar3.primal_law
+            dl3 = ar3.dual_law
 
             @test pl3[x] == p2/4
             @test dl3[cons] == 0
@@ -73,7 +82,10 @@ using JuMP, DiffOpt, HiGHS
             @objective(model, Min, p * x + y)
             optimize!(model)
 
-            c, pl, dl = affine_region(model)
+            ar = affine_region(model)
+            c = ar.constraints
+            pl = ar.primal_law
+            dl = ar.dual_law
 
             @test pl[x] == 1
             @test pl[y] == 9
@@ -89,7 +101,10 @@ using JuMP, DiffOpt, HiGHS
             set_parameter_value(p, 2.0)
             optimize!(model)
 
-            c2, pl2, dl2 = affine_region(model)
+            ar2 = affine_region(model)
+            c2 = ar2.constraints
+            pl2 = ar2.primal_law
+            dl2 = ar2.dual_law
 
             @test pl2[x] == 1
             @test pl2[y] == 9
@@ -109,7 +124,10 @@ using JuMP, DiffOpt, HiGHS
             set_parameter_value(p, -2.0)
             optimize!(model)
 
-            c3, pl3, dl3 = affine_region(model)
+            ar3 = affine_region(model)
+            c3 = ar3.constraints
+            pl3 = ar3.primal_law
+            dl3 = ar3.dual_law
 
             @test pl3[x] == 8
             @test pl3[y] == 2
@@ -140,7 +158,10 @@ using JuMP, DiffOpt, HiGHS
             @objective(model, Min, p * x + y)
             optimize!(model)
 
-            c, pl, dl = affine_region(model)
+            ar = affine_region(model)
+            c = ar.constraints
+            pl = ar.primal_law
+            dl = ar.dual_law
 
             @test pl[x] == 1
             @test pl[y] == p2 - 1
@@ -160,7 +181,10 @@ using JuMP, DiffOpt, HiGHS
             set_parameter_value(p2, 5.0)
             optimize!(model)
 
-            c2, pl2, dl2 = affine_region(model)
+            ar2 = affine_region(model)
+            c2 = ar2.constraints
+            pl2 = ar2.primal_law
+            dl2 = ar2.dual_law
 
             @test pl2[x] == 1
             @test pl2[y] == p2 - 1
@@ -179,7 +203,10 @@ using JuMP, DiffOpt, HiGHS
             set_parameter_value(p, 0.0)
             optimize!(model)
             
-            c3, pl3, dl3 = affine_region(model)
+            ar3 = affine_region(model)
+            c3 = ar3.constraints
+            pl3 = ar3.primal_law
+            dl3 = ar3.dual_law
 
             @test pl3[x] == p2 - 2
             @test pl3[y] == 2

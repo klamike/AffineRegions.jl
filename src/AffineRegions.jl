@@ -7,17 +7,24 @@ import Dualization
 const MOI = JuMP.MOI
 const DualizationJuMPExt = Base.get_extension(Dualization, :DualizationJuMPExt)
 
-export affine_region
+export affine_region, AffineRegion
+
+struct AffineRegion
+    constraints::Vector{JuMP.ScalarConstraint}       # constraints defining the region
+    primal_law::Dict{JuMP.VariableRef,JuMP.AffExpr}  # primal law within region
+    dual_law::Dict{JuMP.ConstraintRef,JuMP.AffExpr}  # dual law within region
+end
+
 function affine_region(model::JuMP.Model)
     check_model(model)
 
     primal_laws, dual_laws = compute_laws(model)
     constraints = compute_constraints(model, primal_laws, dual_laws)
 
-    return (
-        constraints,   # constraints defining the region
-        primal_laws,   # primal law within region
-        dual_laws,     # dual law within region
+    return AffineRegion(
+        constraints,
+        primal_laws,
+        dual_laws,
     )
 end
 
