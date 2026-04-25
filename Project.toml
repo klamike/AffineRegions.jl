@@ -4,18 +4,35 @@ version = "0.1.0"
 authors = ["Klamkin, Michael <mklamkin3@gatech.edu>"]
 
 [deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DiffOpt = "930fe3bc-9c6b-11ea-2d94-6184641e85e7"
-Dualization = "191a621a-6537-11e9-281d-650236a99e60"
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+ParametricOptInterface = "0ce4ce61-57bf-432b-a095-efac525d185e"
+Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+Tar = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
+
+[weakdeps]
+Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
+
+[extensions]
+AffineRegionsGurobiExt = "Gurobi"
+
+[sources]
+DiffOpt = {path = "../DiffOpt.jl"}
 
 [compat]
 DiffOpt = "0.5"
-Dualization = "0.7"
+Gurobi = "1"
 JuMP = "1.29"
+ParametricOptInterface = "0.15.1"
 
 [extras]
-HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "HiGHS"]
+test = ["Random", "Test"]
